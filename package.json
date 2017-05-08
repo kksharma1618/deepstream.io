@@ -1,5 +1,5 @@
 {
-  "name": "deepstream.io",
+  "name": "kkdeepstream.io",
   "version": "2.2.2",
   "description": "a scalable server for realtime webapps",
   "main": "src/deepstream.io.js",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/deepstreamIO/deepstream.io.git"
+    "url": "https://github.com/kksharma1618/deepstream.io.git"
   },
   "dependencies": {
     "adm-zip": "^0.4.7",

@@ -91,7 +91,7 @@ exports.get = function () {
     pluginLoader: {
       include: false, // string[] | false, if plugin's package.json's name is in it then plugin will be included.
       // provide false to load all the deepstream plugin installed
-      exclude: false // string[] | false, if plugin's package.json's name is in it then plugin will be excluded.
+      exclude: false, // string[] | false, if plugin's package.json's name is in it then plugin will be excluded.
       // provide false to load all the deepstream plugin installed
       options: { // key will be plugin's name and value will be passed to plugin as options
 

@@ -1,6 +1,9 @@
 'use strict'
 const fs = require('fs')
+const path = require('path')
 const EventEmitterGrouped = require('event-emitter-grouped')
+
+const noop = function() {}
 
 // scanning algo taken from https://github.com/easeway/js-plugins
 // if package.json exists in each scanned dir
@@ -20,12 +23,22 @@ module.exports = class PluginManager {
     })
   }
 
-  emitSerial(...args) {
-    this.emitter.emitSerial(...args)
+  emitSerial(eventId, args, next) {
+    if(typeof(args) == "function") {
+      next = args;
+      args = undefined;
+    }
+    next = next || noop;
+    this.emitter.emitSerial(eventId, args, next)
   }
 
-  emitParallel(...args) {
-    this.emitter.emitParallel(...args)
+  emitParallel(eventId, args, next) {
+    if(typeof(args) == "function") {
+      next = args;
+      args = undefined;
+    }
+    next = next || noop;
+    this.emitter.emitParallel(eventId, args, next)
   }
 
 }

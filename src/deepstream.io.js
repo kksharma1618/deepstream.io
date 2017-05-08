@@ -243,6 +243,7 @@ Deepstream.prototype._loadConfig = function (config) {
 Deepstream.prototype._onStopped = function () {
   this._currentState = STATES.CLOSED
   this.emit('stopped')
+  this.pluginManager.emitParallel('core:stopped');
 }
 
 /**
@@ -360,6 +361,7 @@ Deepstream.prototype._onStarted = function () {
   this._options.logger.log(C.LOG_LEVEL.INFO, C.EVENT.INFO, 'Deepstream started')
   this._currentState = STATES.IS_RUNNING
   this.emit('started')
+  this.pluginManager.emitParallel('core:started');
 }
 
 /**

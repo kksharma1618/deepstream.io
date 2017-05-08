@@ -24,7 +24,7 @@ module.exports = class PluginManager {
   }
 
   emitSerial(eventId, args, next) {
-    if(typeof(args) == "function") {
+    if(!next && typeof(args) == "function") {
       next = args;
       args = undefined;
     }
@@ -33,7 +33,7 @@ module.exports = class PluginManager {
   }
 
   emitParallel(eventId, args, next) {
-    if(typeof(args) == "function") {
+    if(!next && typeof(args) == "function") {
       next = args;
       args = undefined;
     }

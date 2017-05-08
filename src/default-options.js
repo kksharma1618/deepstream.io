@@ -83,7 +83,20 @@ exports.get = function () {
     listenResponseTimeout: 500,
     lockTimeout: 1000,
     lockRequestTimeout: 1000,
-    broadcastTimeout: 0
+    broadcastTimeout: 0,
+
+    /*
+    * Plugin options
+    */
+    pluginLoader: {
+      include: false, // string[] | false, if plugin's package.json's name is in it then plugin will be included.
+      // provide false to load all the deepstream plugin installed
+      exclude: false // string[] | false, if plugin's package.json's name is in it then plugin will be excluded.
+      // provide false to load all the deepstream plugin installed
+      options: { // key will be plugin's name and value will be passed to plugin as options
+
+      }
+    }
   }
 
   return options

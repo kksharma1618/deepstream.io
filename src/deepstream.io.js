@@ -21,6 +21,7 @@ const ClusterRegistry = require('./cluster/cluster-registry')
 const UniqueRegistry = require('./cluster/cluster-unique-state-provider')
 const C = require('./constants/constants')
 const pkg = require('../package.json')
+const PluginManager = require("./utils/pluginmanager");
 
 const EventEmitter = require('events').EventEmitter
 const EOL = require('os').EOL
@@ -140,6 +141,9 @@ Deepstream.prototype.start = function () {
  */
 Deepstream.prototype._start = function () {
   this._options.logger.log(C.LOG_LEVEL.INFO, C.EVENT.INFO, `deepstream version: ${pkg.version}`)
+
+  // load plugins (not core plugins of cache/message/storage types). others
+  this.pluginManager = new PluginManager(this._options.pluginLoader);
 
   // otherwise (no configFile) deepstream was invoked by API
   if (this._configFile != null) {

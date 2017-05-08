@@ -1,0 +1,100 @@
+'use strict'
+const fs = require('fs')
+const EventEmitterGrouped = require('event-emitter-grouped')
+
+// scanning algo taken from https://github.com/easeway/js-plugins
+// if package.json exists in each scanned dir
+//  - and it has "name"
+//  - and it has "is_deepstream_plugin" set to true
+//  - and requiring that plugin creates a module with "registerPlugin" function
+// then its a plugin. registerPlugin will be called with event-emitter-grouped object
+// host will emitSerial or emitParallel on that object for various plugin hooks/filters
+
+module.exports = class PluginManager {
+  constructor(config) {
+    this.emitter = new EventEmitterGrouped()
+
+    scanAndRegister({
+      emitter: this.emitter,
+      config
+    })
+  }
+
+  emitSerial(...args) {
+    this.emitter.emitSerial(...args)
+  }
+
+  emitParallel(...args) {
+    this.emitter.emitParallel(...args)
+  }
+
+}
+
+function scanAndRegister(host) {
+  // scan directories are in reverse order of
+  // module loading
+  var dirs = [], mainDir;
+  process.config && process.config.variables &&
+      dirs.push(path.join(process.config.variables.node_prefix, 'lib/node_modules'));
+  if (process.env.HOME) {
+      dirs.push(path.join(process.env.HOME, '.node_libraries'));
+      dirs.push(path.join(process.env.HOME, '.node_modules'));
+  }
+  if (require.main && Array.isArray(require.main.paths)) {
+      dirs = dirs.concat(require.main.paths.slice().reverse());
+      require.main.paths[0] && (mainDir = path.dirname(require.main.paths[0]));
+  }
+  scanSubdirsAndRegister(dirs, host);
+  mainDir && loadPackageAndRegister(mainDir, host);
+}
+function scanSubdirsAndRegister(dirs, host) {
+  Array.isArray(dirs) || (dirs = [dirs]);
+  for (var n in dirs) {
+    var dir = dirs[n], subdirs;
+    try {
+      subdirs = fs.readdirSync(dir);
+    } catch (e) {
+      // ignore invalid dirs
+      continue;
+    }
+
+    for (var i in subdirs) {
+      loadPackageAndRegister(path.join(dir, subdirs[i]), host);
+    }
+  }
+}
+
+function loadPackageAndRegister(dir, host) {
+  var metadata;
+  try {
+    metadata = fs.readFileSync(path.join(dir, 'package.json'));
+    metadata = JSON.parse(metadata);
+
+    if(metadata.is_deepstream_plugin && metadata.name) {
+
+      if(host.config && host.config.include) {
+        if(host.config.include.indexOf(metadata.name) < 0) {
+          return;
+        }
+      }
+      if(host.config && host.config.exclude) {
+        if(host.config.exclude.indexOf(metadata.name) >= 0) {
+          return;
+        }
+      }
+
+      try {
+        let plugin = require(dir);
+        if(plugin.registerPlugin) {
+          plugin.registerPlugin(host.emitter);
+        }
+      }
+      catch(e) {
+        // ignore
+      }
+    }
+
+  } catch (e) {
+    // ignore invalid modules
+  }
+}

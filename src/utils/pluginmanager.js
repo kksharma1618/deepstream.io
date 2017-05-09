@@ -10,35 +10,57 @@ const noop = function() {}
 //  - and it has "name"
 //  - and it has "is_deepstream_plugin" set to true
 //  - and requiring that plugin creates a module with "registerPlugin" function
-// then its a plugin. registerPlugin will be called with event-emitter-grouped object
-// host will emitSerial or emitParallel on that object for various plugin hooks/filters
+// then its a plugin. registerPlugin will be called with event-emitter-grouped object and options if any provided in main config
+// host will emitSerial or emitParallel on event-emitter-groupe object for various plugin hooks/filters
 
 module.exports = class PluginManager {
   constructor(config) {
-    this.emitter = new EventEmitterGrouped()
 
-    scanAndRegister({
-      emitter: this.emitter,
-      config
-    })
+    this._config = config;
+    this._enabled = !!this._config.enabled;
+    if(this._enabled) {
+      this._emitter = new EventEmitterGrouped()
+      let host = {
+        emitter: this._emitter,
+        config
+      };
+      if(config.pluginDir) {
+        scanSubdirsAndRegister(config.pluginDir, host);
+      }
+      else {
+        scanAndRegister(host)
+      }
+    }
   }
 
+  isEnabled() {
+    return this._enabled;
+  }
+
+  // next can be called both synchronously or asynchronously
   emitSerial(eventId, args, next) {
     if(!next && typeof(args) == "function") {
       next = args;
       args = undefined;
     }
+    if(!this.isEnabled()) {
+      return next && next();
+    }
     next = next || noop;
-    this.emitter.emitSerial(eventId, args, next)
+    this._emitter.emitSerial(eventId, args, next)
   }
 
+  // next can be called both synchronously or asynchronously
   emitParallel(eventId, args, next) {
     if(!next && typeof(args) == "function") {
       next = args;
       args = undefined;
     }
+    if(!this.isEnabled()) {
+      return next && next();
+    }
     next = next || noop;
-    this.emitter.emitParallel(eventId, args, next)
+    this._emitter.emitParallel(eventId, args, next)
   }
 
 }
@@ -99,7 +121,11 @@ function loadPackageAndRegister(dir, host) {
       try {
         let plugin = require(dir);
         if(plugin.registerPlugin) {
-          plugin.registerPlugin(host.emitter);
+          let options;
+          if(host.config.options && host.config.options[metadata.name]) {
+            options = host.config.options[metadata.name];
+          }
+          plugin.registerPlugin(host.emitter, options);
         }
       }
       catch(e) {

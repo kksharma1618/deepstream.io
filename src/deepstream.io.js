@@ -281,6 +281,7 @@ Deepstream.prototype._showStartLogo = function () {
  * @returns {void}
  */
 Deepstream.prototype._init = function () {
+  var that = this;
   this._connectionEndpoint = new ConnectionEndpoint(this._options, this._onStarted.bind(this))
   this._messageProcessor = new MessageProcessor(this._options)
   this._messageDistributor = new MessageDistributor(this._options)
@@ -292,30 +293,68 @@ Deepstream.prototype._init = function () {
   this._eventHandler = new EventHandler(this._options)
   this._messageDistributor.registerForTopic(
     C.TOPIC.EVENT,
-    this._eventHandler.handle.bind(this._eventHandler)
+    (socketWrapper, message) => {
+      const data = utils.getSocketDataForPlugins(socketWrapper);
+      data.message = message;
+      data.skip = false;
+      this.pluginManager.emitSerial("ds:event", data, () => {
+        if(!data.skip) {
+          this._eventHandler.handle(socketWrapper, data.message);
+        }
+      });
+    }
   )
 
   this._rpcHandler = new RpcHandler(this._options)
   this._messageDistributor.registerForTopic(
     C.TOPIC.RPC,
-    this._rpcHandler.handle.bind(this._rpcHandler)
+    (socketWrapper, message) => {
+      const data = utils.getSocketDataForPlugins(socketWrapper);
+      data.message = message;
+      data.skip = false;
+      this.pluginManager.emitSerial("ds:rpc", data, () => {
+        if(!data.skip) {
+          this._rpcHandler.handle(socketWrapper, data.message);
+        }
+      });
+    }
   )
 
   this._recordHandler = new RecordHandler(this._options)
   this._messageDistributor.registerForTopic(
     C.TOPIC.RECORD,
-    this._recordHandler.handle.bind(this._recordHandler)
+    (socketWrapper, message) => {
+      const data = utils.getSocketDataForPlugins(socketWrapper);
+      data.message = message;
+      data.skip = false;
+      this.pluginManager.emitSerial("ds:record", data, () => {
+        if(!data.skip) {
+          this._recordHandler.handle(socketWrapper, data.message);
+        }
+      });
+    }
   )
 
   this._options.connectionEndpoint = this._connectionEndpoint
   this._presenceHandler = new PresenceHandler(this._options)
   this._messageDistributor.registerForTopic(
     C.TOPIC.PRESENCE,
-    this._presenceHandler.handle.bind(this._presenceHandler)
+    (socketWrapper, message) => {
+      const data = utils.getSocketDataForPlugins(socketWrapper);
+      data.message = message;
+      data.skip = false;
+      this.pluginManager.emitSerial("ds:presence", data, () => {
+        if(!data.skip) {
+          this._presenceHandler.handle(socketWrapper, data.message);
+        }
+      });
+    }
   )
 
-  this._messageProcessor.onAuthenticatedMessage =
-      this._messageDistributor.distribute.bind(this._messageDistributor)
+  this._messageProcessor.onAuthenticatedMessage = function(...args) {
+    console.log('KK-ONAUTHENTICATEDMESSAGE-HANDLER', ...args);
+    that._messageDistributor.distribute(...args);
+  }
 
   if (this._options.permissionHandler.setRecordHandler) {
     this._options.permissionHandler.setRecordHandler(this._recordHandler)

@@ -253,3 +253,15 @@ exports.parseJSON = function (text, reviver) {
     }
   }
 }
+
+/**
+* Picks data we want to expose to plugins from socketWrapper object
+*/
+exports.getSocketDataForPlugins = function(socketWrapper) {
+  return {
+    user: socketWrapper.user,
+    authData: socketWrapper.authData,
+    handshakeData: socketWrapper._handshakeData,
+    uuid: socketWrapper.uuid
+  }
+}

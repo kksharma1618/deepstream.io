@@ -24,8 +24,8 @@ module.exports = class PluginManager {
         emitter: this._emitter,
         config
       };
-      if(config.pluginDir) {
-        scanSubdirsAndRegister(config.pluginDir, host);
+      if(config.pluginsDir) {
+        scanSubdirsAndRegister(config.pluginsDir, host);
       }
       else {
         scanAndRegister(host)

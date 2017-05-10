@@ -352,7 +352,6 @@ Deepstream.prototype._init = function () {
   )
 
   this._messageProcessor.onAuthenticatedMessage = function(...args) {
-    console.log('KK-ONAUTHENTICATEDMESSAGE-HANDLER', ...args);
     that._messageDistributor.distribute(...args);
   }
 

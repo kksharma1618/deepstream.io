@@ -261,7 +261,48 @@ exports.getSocketDataForPlugins = function(socketWrapper) {
   return {
     user: socketWrapper.user,
     authData: socketWrapper.authData,
-    handshakeData: socketWrapper._handshakeData,
-    uuid: socketWrapper.uuid
+    uuid: socketWrapper.uuid,
+    socket: socketWrapper
+  }
+}
+
+/**
+returns the actual value in message 'N23' => 23
+*/
+exports.parseMessageValue = function(v) {
+  if(!v.trim()) {
+    return;
+  }
+  if(v == "T") {
+    return true;
+  }
+  if(v == "F") {
+    return false;
+  }
+  if(v == "U") {
+    return undefined;
+  }
+  if(v == "L") {
+    return null;
+  }
+  if(v.length < 2) {
+    return;
+  }
+  const type = v.charAt(0);
+  v = v.substr(1);
+  if(type == "S") {
+    return v;
+  }
+  if(type == "N") {
+    return Number(v);
+  }
+  if(type == "O") {
+    try {
+      v = JSON.parse(v);
+    }
+    catch(e) {
+      v = undefined;
+    }
+    return v;
   }
 }

@@ -90,13 +90,12 @@ exports.get = function () {
     */
     pluginLoader: {
       enabled: false, // if false then no plugin related tasks will be done
-      pluginDir: false, // if provided then loader will only look in that directory for plugins
+      pluginsDir: false, // if provided then loader will only look in that directory for plugins
       include: false, // string[] | false, if plugin's package.json's name is in it then plugin will be included.
       // provide false to load all the deepstream plugin installed
       exclude: false, // string[] | false, if plugin's package.json's name is in it then plugin will be excluded.
       // provide false to load all the deepstream plugin installed
       options: { // key will be plugin's name and value will be passed to plugin as options
-
       }
     }
   }

@@ -18,19 +18,22 @@ module.exports = class PluginManager {
 
     this._config = config;
     this._enabled = !!this._config.enabled;
-    if(this._enabled) {
+    if (this._enabled) {
       this._emitter = new EventEmitterGrouped()
       let host = {
         emitter: this._emitter,
         config
       };
-      if(config.pluginsDir) {
+      if (config.pluginsDir) {
         scanSubdirsAndRegister(config.pluginsDir, host);
-      }
-      else {
+      } else {
         scanAndRegister(host)
       }
     }
+  }
+
+  getEmitter() {
+    return this._emitter;
   }
 
   isEnabled() {
@@ -39,11 +42,11 @@ module.exports = class PluginManager {
 
   // next can be called both synchronously or asynchronously
   emitSerial(eventId, args, next) {
-    if(!next && typeof(args) == "function") {
+    if (!next && typeof (args) == "function") {
       next = args;
       args = undefined;
     }
-    if(!this.isEnabled()) {
+    if (!this.isEnabled()) {
       return next && next();
     }
     next = next || noop;
@@ -52,11 +55,11 @@ module.exports = class PluginManager {
 
   // next can be called both synchronously or asynchronously
   emitParallel(eventId, args, next) {
-    if(!next && typeof(args) == "function") {
+    if (!next && typeof (args) == "function") {
       next = args;
       args = undefined;
     }
-    if(!this.isEnabled()) {
+    if (!this.isEnabled()) {
       return next && next();
     }
     next = next || noop;
@@ -68,16 +71,17 @@ module.exports = class PluginManager {
 function scanAndRegister(host) {
   // scan directories are in reverse order of
   // module loading
-  var dirs = [], mainDir;
+  var dirs = [],
+    mainDir;
   process.config && process.config.variables &&
-      dirs.push(path.join(process.config.variables.node_prefix, 'lib/node_modules'));
+  dirs.push(path.join(process.config.variables.node_prefix, 'lib/node_modules'));
   if (process.env.HOME) {
-      dirs.push(path.join(process.env.HOME, '.node_libraries'));
-      dirs.push(path.join(process.env.HOME, '.node_modules'));
+    dirs.push(path.join(process.env.HOME, '.node_libraries'));
+    dirs.push(path.join(process.env.HOME, '.node_modules'));
   }
   if (require.main && Array.isArray(require.main.paths)) {
-      dirs = dirs.concat(require.main.paths.slice().reverse());
-      require.main.paths[0] && (mainDir = path.dirname(require.main.paths[0]));
+    dirs = dirs.concat(require.main.paths.slice().reverse());
+    require.main.paths[0] && (mainDir = path.dirname(require.main.paths[0]));
   }
   scanSubdirsAndRegister(dirs, host);
   mainDir && loadPackageAndRegister(mainDir, host);
@@ -85,7 +89,8 @@ function scanAndRegister(host) {
 function scanSubdirsAndRegister(dirs, host) {
   Array.isArray(dirs) || (dirs = [dirs]);
   for (var n in dirs) {
-    var dir = dirs[n], subdirs;
+    var dir = dirs[n],
+      subdirs;
     try {
       subdirs = fs.readdirSync(dir);
     } catch (e) {
@@ -105,30 +110,29 @@ function loadPackageAndRegister(dir, host) {
     metadata = fs.readFileSync(path.join(dir, 'package.json'));
     metadata = JSON.parse(metadata);
 
-    if(metadata.is_deepstream_plugin && metadata.name) {
+    if (metadata.is_deepstream_plugin && metadata.name) {
 
-      if(host.config && host.config.include) {
-        if(host.config.include.indexOf(metadata.name) < 0) {
+      if (host.config && host.config.include) {
+        if (host.config.include.indexOf(metadata.name) < 0) {
           return;
         }
       }
-      if(host.config && host.config.exclude) {
-        if(host.config.exclude.indexOf(metadata.name) >= 0) {
+      if (host.config && host.config.exclude) {
+        if (host.config.exclude.indexOf(metadata.name) >= 0) {
           return;
         }
       }
 
       try {
         let plugin = require(dir);
-        if(plugin.registerPlugin) {
+        if (plugin.registerPlugin) {
           let options;
-          if(host.config.options && host.config.options[metadata.name]) {
+          if (host.config.options && host.config.options[metadata.name]) {
             options = host.config.options[metadata.name];
           }
           plugin.registerPlugin(host.emitter, options);
         }
-      }
-      catch(e) {
+      } catch (e) {
         // ignore
       }
     }

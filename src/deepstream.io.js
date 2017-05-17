@@ -403,6 +403,7 @@ Deepstream.prototype._onStarted = function () {
   this._currentState = STATES.IS_RUNNING
   this.emit('started')
   this.pluginManager.emitParallel('core:started');
+  this.emit("pluginEmitter", this.pluginManager.getEmitter());
 }
 
 /**

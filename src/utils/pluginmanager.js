@@ -64,6 +64,10 @@ module.exports = class PluginManager {
     this._emitter.emitParallel(eventId, args, next)
   }
 
+  getEmitter() {
+    return this._emitter;
+  }
+
 }
 
 function scanAndRegister(host) {

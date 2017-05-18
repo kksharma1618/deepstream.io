@@ -281,7 +281,9 @@ Deepstream.prototype._showStartLogo = function() {
  * @returns {void}
  */
 Deepstream.prototype._init = function() {
-  var that = this;
+  // let plugin have access to config object once most of its loaded
+  this.pluginManager.emitParallel("ds:config", this._options);
+
   this._connectionEndpoint = new ConnectionEndpoint(this._options, this._onStarted.bind(this))
   this._messageProcessor = new MessageProcessor(this._options)
   this._messageDistributor = new MessageDistributor(this._options)
@@ -351,8 +353,9 @@ Deepstream.prototype._init = function() {
     }
   )
 
-  this._messageProcessor.onAuthenticatedMessage = function(...args) {
-    that._messageDistributor.distribute(...args);
+  this._messageProcessor.onAuthenticatedMessage = (...args) => {
+    this.pluginManager.emitSerial("ds:auth", args[0]);
+    this._messageDistributor.distribute(...args);
   }
 
   if (this._options.permissionHandler.setRecordHandler) {
@@ -400,7 +403,7 @@ Deepstream.prototype._onStarted = function() {
   this._currentState = STATES.IS_RUNNING
   this.emit('started')
   this.pluginManager.emitParallel('core:started');
-  this.emit('pluginEmitter', this.pluginManager.getEmitter());
+  this.emit("pluginEmitter", this.pluginManager.getEmitter());
 }
 
 /**

@@ -2,6 +2,7 @@
 const fs = require('fs')
 const path = require('path')
 const EventEmitterGrouped = require('event-emitter-grouped')
+const constants = require("../constants/constants");
 
 const noop = function() {}
 
@@ -64,6 +65,10 @@ module.exports = class PluginManager {
     }
     next = next || noop;
     this._emitter.emitParallel(eventId, args, next)
+  }
+
+  getEmitter() {
+    return this._emitter;
   }
 
 }
@@ -130,7 +135,9 @@ function loadPackageAndRegister(dir, host) {
           if (host.config.options && host.config.options[metadata.name]) {
             options = host.config.options[metadata.name];
           }
-          plugin.registerPlugin(host.emitter, options);
+          plugin.registerPlugin(host.emitter, options, {
+            C: constants
+          });
         }
       } catch (e) {
         // ignore

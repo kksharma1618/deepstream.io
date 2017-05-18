@@ -46,7 +46,6 @@ const RuleApplication = function (params) {
   this._recordData = {}
   this._id = Math.random().toString()
   this._iterations = 0
-  console.log('KK-RULE-APPLICATION', params);
   this._run()
 }
 

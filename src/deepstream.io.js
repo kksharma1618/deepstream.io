@@ -39,7 +39,7 @@ const STATES = C.STATES
  *
  * @constructor
  */
-const Deepstream = function (config) {
+const Deepstream = function(config) {
   this._currentState = STATES.CLOSED
   this.constants = C
   this._loadConfig(config)
@@ -87,7 +87,7 @@ Deepstream.readMessage = readMessage
  * @public
  * @returns {void}
  */
-Deepstream.prototype.set = function (key, value) {
+Deepstream.prototype.set = function(key, value) {
   if (key === 'message') {
     key = 'messageConnector' // eslint-disable-line
   }
@@ -106,7 +106,7 @@ Deepstream.prototype.set = function (key, value) {
  * @public
  * @returns {boolean}
  */
-Deepstream.prototype.isRunning = function () {
+Deepstream.prototype.isRunning = function() {
   return this._currentState === STATES.IS_RUNNING
 }
 
@@ -121,7 +121,7 @@ Deepstream.prototype.isRunning = function () {
  * @public
  * @returns {void}
  */
-Deepstream.prototype.start = function () {
+Deepstream.prototype.start = function() {
   if (this._currentState !== STATES.CLOSED) {
     throw new Error(`Server can only start after it stops succesfully, currently ${this._currentState}`)
   }
@@ -139,7 +139,7 @@ Deepstream.prototype.start = function () {
  * @private
  * @returns {void}
  */
-Deepstream.prototype._start = function () {
+Deepstream.prototype._start = function() {
   this._options.logger.log(C.LOG_LEVEL.INFO, C.EVENT.INFO, `deepstream version: ${pkg.version}`)
 
   // load plugins (not core plugins of cache/message/storage types). others
@@ -172,7 +172,7 @@ Deepstream.prototype._start = function () {
  * @public
  * @returns {void}
  */
-Deepstream.prototype.stop = function () {
+Deepstream.prototype.stop = function() {
   if (this._currentState !== STATES.IS_RUNNING) {
     throw new Error(`Server can only be stopped after it starts succesfully, currently ${this._currentState}`)
   }
@@ -208,7 +208,7 @@ Deepstream.prototype.stop = function () {
  * @public
  * @returns {mixed} the converted value
  */
-Deepstream.prototype.convertTyped = function (value) {
+Deepstream.prototype.convertTyped = function(value) {
   return messageParser.convertTyped(value)
 }
 
@@ -222,7 +222,7 @@ Deepstream.prototype.convertTyped = function (value) {
  * @private
  * @returns {void}
  */
-Deepstream.prototype._loadConfig = function (config) {
+Deepstream.prototype._loadConfig = function(config) {
   if (config === null || typeof config === 'string') {
     const result = jsYamlLoader.loadConfig(config)
     this._configFile = result.file
@@ -240,7 +240,7 @@ Deepstream.prototype._loadConfig = function (config) {
  * @private
  * @returns {void}
  */
-Deepstream.prototype._onStopped = function () {
+Deepstream.prototype._onStopped = function() {
   this._currentState = STATES.CLOSED
   this.emit('stopped')
   this.pluginManager.emitParallel('core:stopped');
@@ -253,7 +253,7 @@ Deepstream.prototype._onStopped = function () {
  * @private
  * @returns {void}
  */
-Deepstream.prototype._showStartLogo = function () {
+Deepstream.prototype._showStartLogo = function() {
   if (this._options.showLogo !== true) {
     return
   }
@@ -280,7 +280,7 @@ Deepstream.prototype._showStartLogo = function () {
  * @private
  * @returns {void}
  */
-Deepstream.prototype._init = function () {
+Deepstream.prototype._init = function() {
   // let plugin have access to config object once most of its loaded
   this.pluginManager.emitParallel("ds:config", this._options);
 
@@ -300,7 +300,7 @@ Deepstream.prototype._init = function () {
       data.message = message;
       data.skip = false;
       this.pluginManager.emitSerial("ds:event", data, () => {
-        if(!data.skip) {
+        if (!data.skip) {
           this._eventHandler.handle(socketWrapper, data.message);
         }
       });
@@ -315,7 +315,7 @@ Deepstream.prototype._init = function () {
       data.message = message;
       data.skip = false;
       this.pluginManager.emitSerial("ds:rpc", data, () => {
-        if(!data.skip) {
+        if (!data.skip) {
           this._rpcHandler.handle(socketWrapper, data.message);
         }
       });
@@ -330,7 +330,7 @@ Deepstream.prototype._init = function () {
       data.message = message;
       data.skip = false;
       this.pluginManager.emitSerial("ds:record", data, () => {
-        if(!data.skip) {
+        if (!data.skip) {
           this._recordHandler.handle(socketWrapper, data.message);
         }
       });
@@ -346,7 +346,7 @@ Deepstream.prototype._init = function () {
       data.message = message;
       data.skip = false;
       this.pluginManager.emitSerial("ds:presence", data, () => {
-        if(!data.skip) {
+        if (!data.skip) {
           this._presenceHandler.handle(socketWrapper, data.message);
         }
       });
@@ -378,7 +378,7 @@ Deepstream.prototype._init = function () {
  * @private
  * @returns {void}
  */
-Deepstream.prototype._checkReady = function (pluginName, plugin) {
+Deepstream.prototype._checkReady = function(pluginName, plugin) {
   if (plugin instanceof EventEmitter) {
     plugin.on('error', this._onPluginError.bind(this, pluginName))
   }
@@ -398,7 +398,7 @@ Deepstream.prototype._checkReady = function (pluginName, plugin) {
  * @private
  * @returns {void}
  */
-Deepstream.prototype._onStarted = function () {
+Deepstream.prototype._onStarted = function() {
   this._options.logger.log(C.LOG_LEVEL.INFO, C.EVENT.INFO, 'Deepstream started')
   this._currentState = STATES.IS_RUNNING
   this.emit('started')
@@ -416,7 +416,7 @@ Deepstream.prototype._onStarted = function () {
  * @private
  * @returns {void}
  */
-Deepstream.prototype._onPluginError = function (pluginName, error) {
+Deepstream.prototype._onPluginError = function(pluginName, error) {
   const msg = `Error from ${pluginName} plugin: ${error.toString()}`
   this._options.logger.log(C.LOG_LEVEL.ERROR, C.EVENT.PLUGIN_ERROR, msg)
 }

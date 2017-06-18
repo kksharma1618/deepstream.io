@@ -1,3 +1,61 @@
+## [2.3.6] - 2017.06.12
+
+## Fixes
+
+- Fix for issue [#703](https://github.com/deepstreamIO/deepstream.io/issues/703)
+  where record deletions were not being propogated correctly within a cluster.
+- Fixes config-loading issue present in the binary release of 2.3.5.
+
+## [2.3.5] - 2017.06.12
+
+## Fixes
+
+- Hardcode v3.0.0-rc1 dependency on javascript-state-machine, as v3.0.1 causes deepstream.io startup to fail
+
+## [2.3.4] - 2017.06.02
+
+## Fixes
+
+- Hot path needs to store values in the correct format
+
+## [2.3.3] - 2017.06.02
+
+### Fixes
+
+- Binary config files have the correct latest structure
+- Fix an issue where heavy concurrent writes on the same record fail
+
+## [2.3.2] - 2017.05.31
+
+### Fixes
+
+- Fixing a connection data regression where it wasn't formatted the same as pre 2.3.0
+
+## [2.3.1] - 2017.05.30
+
+### Fixes
+
+- Correctly merging config options from `config.yml` file with the default options
+
+## [2.3.0] - 2017.05.29
+
+### Features
+
+- Adds "storageHotPathPatterns" config option.
+- Adds support for `setData()`: upsert-style record updates without requiring that a client is
+  subscribed to the record. This uses a new 'CU' (Create and Update) message. The `setData()` API
+  is up to 10x faster than subscribing, setting, then discarding a record.
+- Support for connection endpoint plugins.
+
+### Enhancements
+
+- Significant performance improvements stemming from message batching.
+
+### Miscellaneous
+
+- Moved uws into a connection endpoint plugin.
+- Explicit state-machine that initializes and closes dependencies in a well-defined order.
+
 ## [2.2.2] - 2017.05.03
 
 ### Enhancements

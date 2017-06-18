@@ -1,11 +1,17 @@
 /* global jasmine, spyOn, describe, it, expect, beforeEach, afterEach */
 'use strict'
 
-let RecordHandler = require('../../src/record/record-handler'),
+let proxyquire = require('proxyquire').noCallThru().noPreserveCache(),
+  SocketWrapper = require('../mocks/socket-wrapper-mock'),
+  SubscriptionRegistry = proxyquire('../../src/utils/subscription-registry', {
+    '../message/uws-socket-wrapper': SocketWrapper
+  }),
+  RecordHandler = proxyquire('../../src/record/record-handler', {
+    '../utils/subscription-registry': SubscriptionRegistry
+  }),
   msg = require('../test-helper/test-helper').msg,
   StorageMock = require('../mocks/storage-mock'),
   SocketMock = require('../mocks/socket-mock'),
-  SocketWrapper = require('../../src/message/socket-wrapper'),
   LoggerMock = require('../mocks/logger-mock'),
   noopMessageConnector = require('../../src/default-plugins/noop-message-connector'),
   clusterRegistryMock = new (require('../mocks/cluster-registry-mock'))()
@@ -25,7 +31,8 @@ describe('record handler handles messages', () => {
       uniqueRegistry: {
         get() {},
         release() {}
-      }
+      },
+      storageHotPathPatterns: []
     }
 
   it('creates the record handler', () => {
@@ -323,7 +330,7 @@ describe('record handler handles messages', () => {
       data: ['existingRecord', 6]
     })
 
-    expect(clientA.socket.lastSendMessage).toBe(msg('R|E|INVALID_MESSAGE_DATA|existingRecord+'))
+    expect(clientA.socket.lastSendMessage).toBe(msg('R|E|INVALID_MESSAGE_DATA|existingRecord|6+'))
   })
 
   it('handles invalid patch messages', () => {
@@ -334,7 +341,7 @@ describe('record handler handles messages', () => {
       data: ['existingRecord', 6, 'bla']
     })
 
-    expect(clientA.socket.lastSendMessage).toBe(msg('R|E|INVALID_MESSAGE_DATA|R|P|existingRecord|6|bla+'))
+    expect(clientA.socket.lastSendMessage).toBe(msg('R|E|INVALID_MESSAGE_DATA|existingRecord|6|bla+'))
   })
 
   it('updates a record via same client to the same version', (done) => {
@@ -442,15 +449,15 @@ describe('record handler handles messages', () => {
     expect(clientA.socket.lastSendMessage).toBe(msg('R|R|anotherRecord|0|{}+'))
   })
 
-  it('receives a deletion message from the message connector for anotherRecord', () => {
+  it('receives a deletion ack from the message connector for anotherRecord', () => {
     recordHandler.handle('SOURCE_MESSAGE_CONNECTOR', {
-      raw: msg('R|D|anotherRecord'),
+      raw: msg('R|A|D|anotherRecord'),
       topic: 'R',
-      action: 'D',
-      data: ['anotherRecord']
+      action: 'A',
+      data: ['D', 'anotherRecord']
     })
 
-    expect(clientA.socket.lastSendMessage).toBe(msg('R|D|anotherRecord+'))
+    expect(clientA.socket.lastSendMessage).toBe(msg('R|A|D|anotherRecord+'))
   })
 
   it('creates another record', () => {
@@ -490,7 +497,7 @@ describe('record handler handles messages', () => {
   })
 
   it('updates a record again with an -1 version number', () => {
-  
+
     recordHandler.handle(clientB, {
       raw: msg('R|U|overrideRecord|-1|{"name":"Tom"}'),
       topic: 'R',
@@ -504,18 +511,18 @@ describe('record handler handles messages', () => {
     })
   })
 
-  it('It upserts a record with update', () => {
+  it('creates records when using CREATEANDUPDATE', () => {
     options.cache.nextGetWillBeSynchronous = true
     clientA.socket.lastSendMessage = null
     clientB.socket.lastSendMessage = null
-  
+
     recordHandler.handle(clientB, {
-      raw: msg('R|U|upsertedRecord|-1|{"name":"Tom"}|{"upsert": true}'),
+      raw: msg('R|CU|upsertedRecord|-1|{"name":"Tom"}'),
       topic: 'R',
-      action: 'U',
-      data: ['upsertedRecord', -1, '{"name":"Tom"}','{"upsert": true}']
+      action: 'CU',
+      data: ['upsertedRecord', -1, '{"name":"Tom"}', '{}']
     })
-    
+
     options.cache.get('upsertedRecord', (error, record) => {
       expect(record).toEqual({ _v: 1, _d: { name: 'Tom' } })
     })

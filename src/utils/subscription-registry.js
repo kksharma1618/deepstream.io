@@ -2,7 +2,7 @@
 
 const C = require('../constants/constants')
 const DistributedStateRegistry = require('../cluster/distributed-state-registry')
-const SocketWrapper = require('../message/socket-wrapper')
+const messageBuilder = require('../message/message-builder')
 
 class SubscriptionRegistry {
   /**
@@ -178,14 +178,17 @@ class SubscriptionRegistry {
       // specialized message. only sockets that sent something will have a special message, all
       // other sockets are only listeners and receive the exact same (sharedMessage) message.
       const sockets = this._subscriptions.get(name)
-      if (sockets) {
-        const preparedMessage = SocketWrapper.prepareMessage(sharedMessages)
+      if (sockets && sockets.size > 0) {
+        // unfortunately accessing the first (or any single) element from a set requires creating
+        // an iterator
+        const first = sockets.values().next().value
+        const preparedMessage = first.prepareMessage(sharedMessages)
         for (const socket of sockets) {
           if (!uniqueSenders.has(socket)) {
             socket.sendPrepared(preparedMessage)
           }
         }
-        SocketWrapper.finalizeMessage(preparedMessage)
+        first.finalizeMessage(preparedMessage)
       }
 
       delayedBroadcasts.uniqueSenders.clear()
@@ -207,10 +210,12 @@ class SubscriptionRegistry {
    * @public
    * @returns {void}
    */
-  sendToSubscribers (name, msgString, noDelay, socket) {
+  sendToSubscribers (name, message, noDelay, socket) {
     if (!this._subscriptions.has(name)) {
       return
     }
+
+    const msgString = messageBuilder.getMsg(message.topic, message.action, message.data)
 
     // not all messages are valid, this should be fixed elsewhere!
     if (msgString.charAt(msgString.length - 1) !== C.MESSAGE_SEPERATOR) {
@@ -304,7 +309,7 @@ class SubscriptionRegistry {
 
     const logMsg = `for ${this._topic}:${name} by ${socket.user}`
     this._options.logger.log(C.LOG_LEVEL.DEBUG, this._constants.SUBSCRIBE, logMsg)
-    socket.sendMessage(this._topic, C.ACTIONS.ACK, [this._constants.SUBSCRIBE, name])
+    socket.sendMessage(this._topic, C.ACTIONS.ACK, [this._constants.SUBSCRIBE, name], true)
   }
 
   /**
@@ -321,9 +326,11 @@ class SubscriptionRegistry {
     const sockets = this._subscriptions.get(name)
 
     if (!sockets || !sockets.has(socket)) {
-      const msg = `${socket.user} is not subscribed to ${name}`
-      this._options.logger.log(C.LOG_LEVEL.WARN, this._constants.NOT_SUBSCRIBED, msg)
-      socket.sendError(this._topic, this._constants.NOT_SUBSCRIBED, name)
+      if (!silent) {
+        const msg = `${socket.user} is not subscribed to ${name}`
+        this._options.logger.log(C.LOG_LEVEL.WARN, this._constants.NOT_SUBSCRIBED, msg)
+        socket.sendError(this._topic, this._constants.NOT_SUBSCRIBED, name)
+      }
       return
     }
 
@@ -353,7 +360,7 @@ class SubscriptionRegistry {
     if (!silent) {
       const logMsg = `for ${this._topic}:${name} by ${socket.user}`
       this._options.logger.log(C.LOG_LEVEL.DEBUG, this._constants.UNSUBSCRIBE, logMsg)
-      socket.sendMessage(this._topic, C.ACTIONS.ACK, [this._constants.UNSUBSCRIBE, name])
+      socket.sendMessage(this._topic, C.ACTIONS.ACK, [this._constants.UNSUBSCRIBE, name], true)
     }
   }
 

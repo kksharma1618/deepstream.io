@@ -2,7 +2,7 @@
 'use strict'
 
 let RpcHandler = require('../../src/rpc/rpc-handler'),
-  SocketWrapper = require('../../src/message/socket-wrapper'),
+  SocketWrapper = require('../mocks/socket-wrapper-mock'),
   C = require('../../src/constants/constants'),
   _msg = require('../test-helper/test-helper').msg,
   SocketMock = require('../mocks/socket-mock'),
@@ -281,7 +281,7 @@ describe('the rpc handler', () => {
         rpcHandler.handle(provider, responseMessage)
         expect(provider.socket.lastSendMessage).toBe(_msg('P|E|INVALID_RPC_CORRELATION_ID|unexpected state for rpc addTwo with action RES+'))
         done()
-      }, 10)
+      }, 30)
   })
 
   it('executes remote rpcs', () => {

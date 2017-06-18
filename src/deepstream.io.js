@@ -366,7 +366,7 @@ Deepstream.prototype.onEnterServiceInit = function () {
   )
 
   this._messageProcessor.onAuthenticatedMessage = (...args) => {
-    this.pluginManager.emitSerial("ds:auth", args[0]);
+    this.pluginManager.emitSerial("ds:auth", utils.getSocketDataForPlugins(args[0]));
     this._messageDistributor.distribute(...args);
   }
 

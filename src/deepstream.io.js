@@ -158,9 +158,9 @@ Deepstream.prototype.start = function () {
   if (!this._state.is(STATES.STOPPED)) {
     throw new Error(`Server can only start after it stops successfully. Current state: ${this._state.state}`)
   }
+  this.pluginManager = new PluginManager(this._options.pluginLoader);
   this._showStartLogo()
   // move plugin ctro inside state.start
-  this.pluginManager = new PluginManager(this._options.pluginLoader);
   process.nextTick(() => this._state.start())
 }
 

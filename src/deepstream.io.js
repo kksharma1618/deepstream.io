@@ -523,8 +523,8 @@ Deepstream.prototype._loadConfig = function (config) {
  */
 Deepstream.prototype._showStartLogo = function () {
 
-  this.pluginManager.emitParallel('core:started');
   this.emit("pluginEmitter", this.pluginManager.getEmitter());
+  this.pluginManager.emitParallel('core:started');
 
   if (this._options.showLogo !== true) {
     return
